@@ -1,0 +1,18 @@
+{
+  "name": "news-app-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "run-once": "node src/index.js --once",
+    "telegram:chat-id": "node src/scripts/get-chat-id.js",
+    "telegram:test": "node src/scripts/test-telegram.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0",
+    "dotenv": "^16.5.0",
+    "node-cron": "^3.0.3"
+  }
+}
