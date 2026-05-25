@@ -1,5 +1,6 @@
 import cron from 'node-cron';
 
+import { startApiServer } from './api.js';
 import { assertTelegramConfig, config } from './config.js';
 import { assertValidTelegramConfig } from './validate-telegram.js';
 import { getDb } from './db.js';
@@ -23,9 +24,14 @@ async function start() {
 
   console.log('News notification server');
   console.log(`  API:      ${config.newsApiUrl}?mode=${config.newsFeedMode}`);
+  console.log(`  Server:   http://localhost:${config.port}`);
   console.log(`  Cron:     ${config.cronSchedule}`);
   console.log(`  Database: ${config.dbPath}`);
   console.log(`  Dry run:  ${config.dryRun}`);
+
+  if (!runOnce) {
+    startApiServer();
+  }
 
   if (!runOnce) {
     try {

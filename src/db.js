@@ -32,6 +32,11 @@ function initSchema(database) {
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS tracked_symbols (
+      symbol TEXT PRIMARY KEY,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
   `);
 }
 
@@ -67,4 +72,29 @@ export function saveArticle(article) {
 export function getArticleCount() {
   const row = getDb().prepare(`SELECT COUNT(*) AS count FROM articles`).get();
   return row.count;
+}
+
+export function saveTrackedSymbols(symbols) {
+  const database = getDb();
+  const insert = database.prepare(
+    `INSERT INTO tracked_symbols (symbol)
+     VALUES (?)
+     ON CONFLICT(symbol) DO NOTHING`,
+  );
+
+  const insertMany = database.transaction((values) => {
+    for (const symbol of values) {
+      insert.run(symbol);
+    }
+  });
+
+  insertMany(symbols);
+}
+
+export function getTrackedSymbols() {
+  const rows = getDb()
+    .prepare(`SELECT symbol FROM tracked_symbols ORDER BY created_at ASC, symbol ASC`)
+    .all();
+
+  return rows.map((row) => row.symbol);
 }

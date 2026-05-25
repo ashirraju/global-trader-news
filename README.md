@@ -29,6 +29,7 @@ Edit `.env` and set:
 | `TELEGRAM_CHAT_ID` | Your chat id (e.g. from [@userinfobot](https://t.me/userinfobot)) |
 | `NEWS_FEED_MODE` | Feeds mode, default `all` |
 | `CRON_SCHEDULE` | Cron expression, default every 2 minutes |
+| `PORT` | Local API server port, default `3000` |
 
 ### 3. Telegram bot
 
@@ -53,9 +54,53 @@ npm start
 npm run dev
 ```
 
+## POST API
+
+When the server is running, you can call:
+
+```bash
+POST /news
+POST /api/news
+```
+
+Request body accepts either a single symbol or multiple:
+
+```json
+{
+  "symbol": "RELIANCE"
+}
+```
+
+```json
+{
+  "symbol": ["RELIANCE", "TCS"]
+}
+```
+
+Example:
+
+```bash
+curl -X POST http://localhost:3000/news \
+  -H "Content-Type: application/json" \
+  -d '{"symbol":["RELIANCE","TCS"]}'
+```
+
+Posted symbols are saved in SQLite and survive server restarts. Each request adds new symbols to the saved watchlist.
+
+To view the saved watchlist:
+
+```bash
+curl http://localhost:3000/symbols
+```
+
 ## Notification filter
 
-Telegram alerts (and browser push in the Angular app) are sent **only** when an article’s `categories` include **`Global`** or **`Commentary`**. Other categories (e.g. `Result`, `Default`) are still saved to the database but skipped for notifications.
+Telegram alerts (and browser push in the Angular app) are sent when either:
+
+- an article’s `categories` include **`Global`** or **`Commentary`**
+- the article includes a `symbol` that matches the saved watchlist from the POST API
+
+Other categories without a symbol (e.g. `Result`, `Default`) are still saved to the database but skipped for notifications.
 
 ## First run behavior
 

@@ -1,6 +1,7 @@
 import {
   articleExists,
   getArticleCount,
+  getTrackedSymbols,
   isInitialized,
   markInitialized,
   saveArticle,
@@ -14,6 +15,7 @@ export async function runNewsCheck() {
   console.log(`[${new Date().toISOString()}] Checking for new articles…`);
 
   const articles = await fetchLatestNews();
+  const trackedSymbols = new Set(getTrackedSymbols().map((symbol) => symbol.toUpperCase()));
   const firstRun = !isInitialized();
   let newCount = 0;
   let notifiedCount = 0;
@@ -31,7 +33,7 @@ export async function runNewsCheck() {
       continue;
     }
 
-    if (!shouldNotify(article.categories)) {
+    if (!shouldNotify(article.categories, article.symbol, trackedSymbols)) {
       console.log(`[skip] ${article.title} (${article.categories.join(', ') || 'no category'})`);
       continue;
     }
