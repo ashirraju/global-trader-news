@@ -118,3 +118,35 @@ Example with PM2:
 pm2 start src/index.js --name news-notifier
 pm2 save
 ```
+
+## Deploy on Northflank
+
+Use a single `Deployment service` for this app. Do not create a separate Northflank cron job, because this server already runs its own scheduler.
+
+Northflank settings:
+
+- Build method: `Dockerfile`
+- Start port: `3000`
+- Health check path: `/health`
+- Persistent volume mount path: `/data`
+
+Recommended runtime variables:
+
+```bash
+NEWS_API_URL=https://neo.kotaksecurities.com/api/1news/feeds
+NEWS_FEED_MODE=all
+CRON_SCHEDULE=*/2 * * * *
+PORT=3000
+TELEGRAM_BOT_TOKEN=your-telegram-bot-token
+TELEGRAM_CHAT_ID=your-telegram-chat-id
+DB_PATH=/data/news.db
+DRY_RUN=false
+```
+
+Useful endpoints after deploy:
+
+```bash
+POST /news
+GET /symbols
+GET /health
+```
