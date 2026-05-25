@@ -25,6 +25,21 @@ function normalizeForComparison(text) {
   return normalizeText(text).replace(/[^A-Z0-9]+/gi, '').toUpperCase();
 }
 
+function shouldShowSummary(title, description) {
+  const normalizedTitle = normalizeForComparison(title);
+  const normalizedDescription = normalizeForComparison(description);
+
+  if (!normalizedDescription) {
+    return false;
+  }
+
+  if (!normalizedTitle) {
+    return true;
+  }
+
+  return normalizedDescription !== normalizedTitle;
+}
+
 function formatPublishedAt(rawValue) {
   const value = normalizeText(rawValue);
 
@@ -47,40 +62,42 @@ function formatPublishedAt(rawValue) {
 
 function buildMessage(article) {
   const category = escapeHtml(normalizeText(article.category || 'News'));
-  const titleText = truncateText(normalizeText(article.title), 300);
-  const descriptionText = truncateText(normalizeText(article.description), 700);
+  const rawTitleText = normalizeText(article.title);
+  const rawDescriptionText = normalizeText(article.description);
+  const titleText = truncateText(rawTitleText, 300);
+  const descriptionText = truncateText(rawDescriptionText, 700);
   const publishedAt = formatPublishedAt(article.publishedAt);
   const symbol = normalizeText(article.symbol);
   const companyName = normalizeText(article.companyName);
   const parts = [
-    `📈 <b>${category} Alert</b>`,
+    '<b>Global Trader News</b>',
+    category,
   ];
 
   if (symbol) {
     parts.push(
       companyName
-        ? `<b>Symbol:</b> ${escapeHtml(symbol)} (${escapeHtml(companyName)})`
-        : `<b>Symbol:</b> ${escapeHtml(symbol)}`,
+        ? `<b>${escapeHtml(symbol)}</b> - ${escapeHtml(companyName)}`
+        : `<b>${escapeHtml(symbol)}</b>`,
     );
   }
 
-  parts.push(`<b>Headline:</b> ${escapeHtml(titleText)}`);
+  parts.push(escapeHtml(titleText));
 
-  if (
-    descriptionText
-    && normalizeForComparison(descriptionText) !== normalizeForComparison(titleText)
-  ) {
-    parts.push(`<b>Summary:</b> ${escapeHtml(descriptionText)}`);
+  if (shouldShowSummary(rawTitleText, rawDescriptionText)) {
+    parts.push(escapeHtml(descriptionText));
   }
 
   if (publishedAt) {
-    parts.push(`<b>Published:</b> ${escapeHtml(publishedAt)}`);
+    parts.push(`Published: ${escapeHtml(publishedAt)}`);
   }
+
+  parts.push('------');
 
   let message = parts.join('\n\n');
 
   if (article.url) {
-    message += `\n\n<a href="${escapeHtml(article.url)}">Open article</a>`;
+    message += `\n\nRead more: <a href="${escapeHtml(article.url)}">${escapeHtml(article.url)}</a>`;
   }
 
   return message;
