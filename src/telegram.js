@@ -1,25 +1,86 @@
 import { config } from './config.js';
 
 function escapeHtml(text) {
-  return text
+  return String(text ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function normalizeText(text) {
+  return String(text ?? '').replace(/\s+/g, ' ').trim();
+}
+
+function truncateText(text, maxLength) {
+  if (text.length <= maxLength) {
+    return text;
+  }
+
+  return `${text.slice(0, maxLength - 1).trimEnd()}...`;
+}
+
+function normalizeForComparison(text) {
+  return normalizeText(text).replace(/[^A-Z0-9]+/gi, '').toUpperCase();
+}
+
+function formatPublishedAt(rawValue) {
+  const value = normalizeText(rawValue);
+
+  if (!value) {
+    return '';
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat('en-IN', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'Asia/Kolkata',
+  }).format(date);
 }
 
 function buildMessage(article) {
-  const category = escapeHtml(article.category);
-  const title = escapeHtml(article.title);
-  const description = escapeHtml(article.description.slice(0, 500));
-  const date = escapeHtml(article.publishedAt);
-  const symbolLine = article.symbol
-    ? `\n<b>${escapeHtml(article.symbol)}</b>${article.companyName ? ` — ${escapeHtml(article.companyName)}` : ''}\n`
-    : '';
+  const category = escapeHtml(normalizeText(article.category || 'News'));
+  const titleText = truncateText(normalizeText(article.title), 300);
+  const descriptionText = truncateText(normalizeText(article.description), 700);
+  const publishedAt = formatPublishedAt(article.publishedAt);
+  const symbol = normalizeText(article.symbol);
+  const companyName = normalizeText(article.companyName);
+  const parts = [
+    `📈 <b>${category} Alert</b>`,
+  ];
 
-  let message = `📰 <b>New ${category} News</b>${symbolLine}\n<b>${title}</b>\n\n${description}\n\n<i>${date}</i>`;
+  if (symbol) {
+    parts.push(
+      companyName
+        ? `<b>Symbol:</b> ${escapeHtml(symbol)} (${escapeHtml(companyName)})`
+        : `<b>Symbol:</b> ${escapeHtml(symbol)}`,
+    );
+  }
+
+  parts.push(`<b>Headline:</b> ${escapeHtml(titleText)}`);
+
+  if (
+    descriptionText
+    && normalizeForComparison(descriptionText) !== normalizeForComparison(titleText)
+  ) {
+    parts.push(`<b>Summary:</b> ${escapeHtml(descriptionText)}`);
+  }
+
+  if (publishedAt) {
+    parts.push(`<b>Published:</b> ${escapeHtml(publishedAt)}`);
+  }
+
+  let message = parts.join('\n\n');
 
   if (article.url) {
-    message += `\n\n<a href="${escapeHtml(article.url)}">Read more</a>`;
+    message += `\n\n<a href="${escapeHtml(article.url)}">Open article</a>`;
   }
 
   return message;
@@ -32,7 +93,6 @@ async function sendTelegramMessage(text, { disableWebPagePreview = true } = {}) 
   }
 
   if (!config.telegramBotToken || !config.telegramChatId) {
-    console.log(config)
     throw new Error('Telegram is not configured. Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID.');
   }
 
