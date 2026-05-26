@@ -30,6 +30,7 @@ Edit `.env` and set:
 | `NEWS_FEED_MODE` | Feeds mode, default `all` |
 | `CRON_SCHEDULE` | Cron expression, default every 2 minutes |
 | `PORT` | Local API server port, default `3000` |
+| `TIME_ZONE` | Timezone for Telegram timestamps, default `Asia/Kolkata` |
 
 ### 3. Telegram bot
 

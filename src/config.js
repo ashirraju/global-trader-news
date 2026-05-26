@@ -19,6 +19,7 @@ export const config = {
   newsFeedMode: process.env.NEWS_FEED_MODE ?? 'all',
   cronSchedule: process.env.CRON_SCHEDULE ?? '*/2 * * * *',
   port: Number(process.env.PORT ?? 3000),
+  timeZone: process.env.TIME_ZONE ?? 'Asia/Kolkata',
   telegramBotToken: process.env.TELEGRAM_BOT_TOKEN ?? '',
   telegramChatId: process.env.TELEGRAM_CHAT_ID ?? '',
   dbPath: path.resolve(__dirname, '..', process.env.DB_PATH ?? './data/news.db'),

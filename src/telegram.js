@@ -53,11 +53,27 @@ function formatPublishedAt(rawValue) {
     return value;
   }
 
-  return new Intl.DateTimeFormat('en-IN', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone: 'Asia/Kolkata',
-  }).format(date);
+  try {
+    return new Intl.DateTimeFormat('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: config.timeZone,
+      timeZoneName: 'short',
+    }).format(date);
+  } catch {
+    return new Intl.DateTimeFormat('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    }).format(date);
+  }
 }
 
 function buildMessage(article) {
@@ -140,13 +156,14 @@ export async function sendNewsNotification(article) {
 }
 
 export async function sendStartupNotification() {
-  const startedAt = new Date().toISOString();
+  const startedAt = formatPublishedAt(new Date().toISOString());
   const message = [
     '🚀 <b>News notification server started</b>',
     `<i>${escapeHtml(startedAt)}</i>`,
     '',
     `<b>Mode:</b> ${escapeHtml(config.newsFeedMode)}`,
     `<b>Cron:</b> ${escapeHtml(config.cronSchedule)}`,
+    `<b>Timezone:</b> ${escapeHtml(config.timeZone)}`,
   ].join('\n');
 
   await sendTelegramMessage(message);
