@@ -115,6 +115,23 @@ export function saveTrackedSymbols(symbols) {
   insertMany(symbols);
 }
 
+export function removeTrackedSymbols(symbols) {
+  const database = getDb();
+  const remove = database.prepare(`DELETE FROM tracked_symbols WHERE symbol = ?`);
+  let removedCount = 0;
+
+  const removeMany = database.transaction((values) => {
+    for (const symbol of values) {
+      const result = remove.run(symbol);
+      removedCount += result.changes;
+    }
+  });
+
+  removeMany(symbols);
+
+  return removedCount;
+}
+
 export function getTrackedSymbols() {
   const rows = getDb()
     .prepare(`SELECT symbol FROM tracked_symbols ORDER BY created_at ASC, symbol ASC`)

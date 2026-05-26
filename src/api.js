@@ -1,7 +1,7 @@
 import http from 'node:http';
 
 import { config } from './config.js';
-import { getTrackedSymbols, saveTrackedSymbols } from './db.js';
+import { getTrackedSymbols, removeTrackedSymbols, saveTrackedSymbols } from './db.js';
 import { fetchLatestNews } from './news.js';
 
 function sendJson(res, statusCode, payload) {
@@ -82,6 +82,35 @@ async function handleSymbolNews(req, res) {
   }
 }
 
+async function handleRemoveSymbols(req, res) {
+  let body;
+
+  try {
+    body = await readJsonBody(req);
+  } catch (error) {
+    sendJson(res, 400, { error: error.message });
+    return;
+  }
+
+  const symbolsToRemove = normalizeSymbols(body.symbol);
+
+  if (!symbolsToRemove.length) {
+    sendJson(res, 400, {
+      error: 'Provide "symbol" as a string or a non-empty array of strings.',
+    });
+    return;
+  }
+
+  const removedCount = removeTrackedSymbols(symbolsToRemove);
+  const savedSymbols = getTrackedSymbols();
+
+  sendJson(res, 200, {
+    removedSymbols: symbolsToRemove,
+    removedCount,
+    symbols: savedSymbols,
+  });
+}
+
 export function startApiServer() {
   const server = http.createServer((req, res) => {
     if (req.method === 'GET' && req.url === '/health') {
@@ -91,6 +120,11 @@ export function startApiServer() {
 
     if (req.method === 'GET' && (req.url === '/symbols' || req.url === '/api/symbols')) {
       sendJson(res, 200, { symbols: getTrackedSymbols() });
+      return;
+    }
+
+    if (req.method === 'DELETE' && (req.url === '/symbols' || req.url === '/api/symbols')) {
+      handleRemoveSymbols(req, res);
       return;
     }
 
@@ -109,6 +143,7 @@ export function startApiServer() {
     console.log(`API server listening on http://localhost:${config.port}`);
     console.log('POST /news or /api/news with {"symbol":["RELIANCE","TCS"]}');
     console.log('GET /symbols or /api/symbols to view saved watchlist');
+    console.log('DELETE /symbols or /api/symbols with {"symbol":["RELIANCE"]} to remove symbols');
   });
 
   return server;

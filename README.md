@@ -94,6 +94,14 @@ To view the saved watchlist:
 curl http://localhost:3000/symbols
 ```
 
+To remove one or more saved symbols:
+
+```bash
+curl -X DELETE http://localhost:3000/symbols \
+  -H "Content-Type: application/json" \
+  -d '{"symbol":["RELIANCE","TCS"]}'
+```
+
 ## Notification filter
 
 Telegram alerts (and browser push in the Angular app) are sent when either:
@@ -153,5 +161,6 @@ Useful endpoints after deploy:
 ```bash
 POST /news
 GET /symbols
+DELETE /symbols
 GET /health
 ```
