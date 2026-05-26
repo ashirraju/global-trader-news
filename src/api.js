@@ -50,9 +50,9 @@ async function handleSymbolNews(req, res) {
     return;
   }
 
-  const symbols = normalizeSymbols(body.symbol);
+  const requestedSymbols = normalizeSymbols(body.symbol);
 
-  if (!symbols.length) {
+  if (!requestedSymbols.length) {
     sendJson(res, 400, {
       error: 'Provide "symbol" as a string or a non-empty array of strings.',
     });
@@ -60,16 +60,19 @@ async function handleSymbolNews(req, res) {
   }
 
   try {
-    saveTrackedSymbols(symbols);
+    saveTrackedSymbols(requestedSymbols);
+    const savedSymbols = getTrackedSymbols();
+    const activeSymbols = new Set(savedSymbols.map((symbol) => symbol.trim().toUpperCase()));
 
     const articles = await fetchLatestNews();
     const filteredArticles = articles.filter((article) =>
-      article.symbol && symbols.includes(article.symbol.trim().toUpperCase()),
+      article.symbol && activeSymbols.has(article.symbol.trim().toUpperCase()),
     );
 
     sendJson(res, 200, {
-      savedSymbols: getTrackedSymbols(),
-      symbols,
+      savedSymbols,
+      requestedSymbols,
+      symbols: savedSymbols,
       count: filteredArticles.length,
       data: filteredArticles,
     });

@@ -86,6 +86,7 @@ curl -X POST http://localhost:3000/news \
 ```
 
 Posted symbols are saved in SQLite and survive server restarts. Each request adds new symbols to the saved watchlist.
+The `/news` response filters articles using the full saved watchlist after saving the new symbols from that request.
 
 To view the saved watchlist:
 
@@ -105,6 +106,8 @@ Other categories without a symbol (e.g. `Result`, `Default`) are still saved to 
 ## First run behavior
 
 On the **first** run, all current articles are saved to the database **without** Telegram notifications (baseline). Every later run only alerts for **new** article IDs that pass the category filter.
+
+The server keeps only the newest `500` stored articles and automatically deletes older rows after each news check.
 
 To reset: delete `data/news.db` and restart.
 
@@ -142,6 +145,8 @@ TELEGRAM_CHAT_ID=your-telegram-chat-id
 DB_PATH=/data/news.db
 DRY_RUN=false
 ```
+
+Without a persistent volume mounted at `/data`, saved symbols and article history will be lost when the container is replaced.
 
 Useful endpoints after deploy:
 

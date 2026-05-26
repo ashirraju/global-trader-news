@@ -74,6 +74,30 @@ export function getArticleCount() {
   return row.count;
 }
 
+export function pruneOldArticles(maxCount = 500) {
+  const articleCount = getArticleCount();
+
+  if (articleCount <= maxCount) {
+    return 0;
+  }
+
+  const deleteCount = articleCount - maxCount;
+
+  const result = getDb()
+    .prepare(
+      `DELETE FROM articles
+       WHERE id IN (
+         SELECT id
+         FROM articles
+         ORDER BY datetime(notified_at) ASC, id ASC
+         LIMIT ?
+       )`,
+    )
+    .run(deleteCount);
+
+  return result.changes;
+}
+
 export function saveTrackedSymbols(symbols) {
   const database = getDb();
   const insert = database.prepare(

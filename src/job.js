@@ -4,11 +4,14 @@ import {
   getTrackedSymbols,
   isInitialized,
   markInitialized,
+  pruneOldArticles,
   saveArticle,
 } from './db.js';
 import { fetchLatestNews } from './news.js';
 import { shouldNotify } from './notify-categories.js';
 import { sendNewsNotification } from './telegram.js';
+
+const MAX_ARTICLE_COUNT = 500;
 
 export async function runNewsCheck() {
   const started = Date.now();
@@ -54,10 +57,16 @@ export async function runNewsCheck() {
     );
   }
 
+  const prunedCount = pruneOldArticles(MAX_ARTICLE_COUNT);
+
+  if (prunedCount > 0) {
+    console.log(`Pruned ${prunedCount} older articles to keep the latest ${MAX_ARTICLE_COUNT}.`);
+  }
+
   const elapsed = Date.now() - started;
   console.log(
-    `Done in ${elapsed}ms — fetched ${articles.length}, new ${newCount}, notified ${notifiedCount}`,
+    `Done in ${elapsed}ms — fetched ${articles.length}, new ${newCount}, notified ${notifiedCount}, pruned ${prunedCount}`,
   );
 
-  return { fetched: articles.length, new: newCount, notified: notifiedCount };
+  return { fetched: articles.length, new: newCount, notified: notifiedCount, pruned: prunedCount };
 }
