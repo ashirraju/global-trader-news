@@ -1,4 +1,4 @@
-export const NOTIFY_CATEGORIES = ['Global', 'Commentary'];
+export const NOTIFY_CATEGORIES = ['Global', 'Commentary', 'Special Coverage', 'Fixed_income', 'Commodities'];
 
 export function shouldNotify(categories, symbol = '', trackedSymbols = new Set()) {
   if (
