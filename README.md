@@ -141,6 +141,7 @@ Northflank settings:
 - Start port: `3000`
 - Health check path: `/health`
 - Persistent volume mount path: `/data`
+- Service replicas: `1` for SQLite
 
 Recommended runtime variables:
 
@@ -156,6 +157,7 @@ DRY_RUN=false
 ```
 
 Without a persistent volume mounted at `/data`, saved symbols and article history will be lost when the container is replaced.
+After deploy, check the startup log and confirm it prints `Database: /data/news.db`.
 
 Useful endpoints after deploy:
 

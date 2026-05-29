@@ -1,4 +1,5 @@
 import cron from 'node-cron';
+import path from 'node:path';
 
 import { startApiServer } from './api.js';
 import { assertTelegramConfig, config } from './config.js';
@@ -8,6 +9,23 @@ import { runNewsCheck } from './job.js';
 import { sendStartupNotification } from './telegram.js';
 
 const runOnce = process.argv.includes('--once');
+const NORTHFLANK_VOLUME_PATH = '/data';
+
+function logPersistenceWarning() {
+  const resolvedDbPath = path.resolve(config.dbPath);
+  const volumeRoot = `${NORTHFLANK_VOLUME_PATH}${path.sep}`;
+  const usesNorthflankVolume =
+    resolvedDbPath === NORTHFLANK_VOLUME_PATH || resolvedDbPath.startsWith(volumeRoot);
+
+  if (process.env.NODE_ENV === 'production' && !usesNorthflankVolume) {
+    console.warn(
+      `Warning: DB_PATH is ${resolvedDbPath}, not under ${NORTHFLANK_VOLUME_PATH}.`,
+    );
+    console.warn(
+      'If this is running on Northflank, attach a persistent volume at /data and set DB_PATH=/data/news.db or SQLite data may be lost on redeploy/restart.',
+    );
+  }
+}
 
 async function start() {
   getDb();
@@ -28,6 +46,7 @@ async function start() {
   console.log(`  Cron:     ${config.cronSchedule}`);
   console.log(`  Database: ${config.dbPath}`);
   console.log(`  Dry run:  ${config.dryRun}`);
+  logPersistenceWarning();
 
   if (!runOnce) {
     startApiServer();
